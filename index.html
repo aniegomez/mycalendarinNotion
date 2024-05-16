@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Calendar Widget</title>
+</head>
+<body>
+    <ul id="events"></ul>
+
+    <script>
+        function loadGoogleCalendarApi() {
+            gapi.client.load('calendar', 'v3', fetchEvents);
+        }
+
+        function fetchEvents() {
+            gapi.auth.authorize({
+                'client_id': '741876226283-h310u9r5fo13iifr4u903bppjeql6k6r.apps.googleusercontent.com',
+                'scope': 'https://www.googleapis.com/auth/calendar.readonly',
+                'immediate': true
+            }, function(authResult) {
+                if (authResult && !authResult.error) {
+                    gapi.client.calendar.events.list({
+                        'calendarId': 'primary',
+                        'timeMin': (new Date()).toISOString(),
+                        'showDeleted': false,
+                        'singleEvents': true,
+                        'maxResults': 10,
+                        'orderBy': 'startTime'
+                    }).then(function(response) {
+                        var events = response.result.items;
+                        var eventsList = document.getElementById('events');
+                        eventsList.innerHTML = events.length > 0 ? 
+                            events.map(function(event) {
+                                return '<li>' + event.summary + ' (' + (event.start.dateTime || event.start.date) + ')</li>';
+                            }).join('') : '<li>No hay eventos próximos.</li>';
+                    });
+                } else {
+                    console.error('Error de autenticación:', authResult.error);
+                }
+            });
+        }
+
+        window.onload = function() {
+            loadGoogleCalendarApi();
+        };
+    </script>
+    <script src="https://apis.google.com/js/api.js"></script>
+</body>
+</html>
